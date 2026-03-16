@@ -1,0 +1,73 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compile Grbl for Arduino UNO",
+      "type": "shell",
+      "command": "D:\\GitHub\\grbl\\arduino-cli_1.4.1_Windows_64bit\\arduino-cli.exe",
+      "args": [
+        "compile",
+        "--fqbn",
+        "arduino:avr:uno",
+        "D:\\GitHub\\grbl\\grbl\\examples\\grblUpload",
+        "--libraries",
+        "D:\\GitHub\\grbl"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compile Grbl for Arduino UNO (Verbose)",
+      "type": "shell",
+      "command": "D:\\GitHub\\grbl\\arduino-cli_1.4.1_Windows_64bit\\arduino-cli.exe",
+      "args": [
+        "compile",
+        "--fqbn",
+        "arduino:avr:uno",
+        "D:\\GitHub\\grbl\\grbl\\examples\\grblUpload",
+        "--libraries",
+        "D:\\GitHub\\grbl",
+        "-v"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Upload Grbl to Arduino UNO (COM3)",
+      "type": "shell",
+      "command": "D:\\GitHub\\grbl\\arduino-cli_1.4.1_Windows_64bit\\arduino-cli.exe",
+      "args": [
+        "upload",
+        "-p",
+        "COM3",
+        "--fqbn",
+        "arduino:avr:uno",
+        "D:\\GitHub\\grbl\\grbl\\examples\\grblUpload"
+      ],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "problemMatcher": [],
+      "dependsOn": ["Compile Grbl for Arduino UNO"]
+    }
+  ]
+}
