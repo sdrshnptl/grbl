@@ -98,7 +98,9 @@ uint8_t spindle_get_state()
 void spindle_stop()
 {
   #ifdef VARIABLE_SPINDLE
-    SPINDLE_TCCRA_REGISTER &= ~(1<<SPINDLE_COMB_BIT); // Disable PWM. Output voltage is zero.
+    // Move servo to pen-up position and keep PWM active so servo holds position.
+    SPINDLE_TCCRA_REGISTER |= (1<<SPINDLE_COMB_BIT);  // Ensure PWM is enabled.
+    SPINDLE_OCR_REGISTER = SERVO_PEN_UP_VALUE;         // Drive servo to pen-up.
     #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
       #ifdef INVERT_SPINDLE_ENABLE_PIN
         SPINDLE_ENABLE_PORT |= (1<<SPINDLE_ENABLE_BIT);  // Set pin to high
@@ -189,28 +191,23 @@ void spindle_stop()
   #else 
   
     // Called by spindle_set_state() and step segment generator. Keep routine small and efficient.
+    // Servo pen lift: maps S0-Smax to OCR2A pulse width values for SG-90 on Pin 11.
+    //   M3 S1000 = pen DOWN (SERVO_PEN_DOWN_VALUE), M5 = pen UP (SERVO_PEN_UP_VALUE)
     uint8_t spindle_compute_pwm_value(float rpm) // 328p PWM register is 8-bit.
     {
       uint8_t pwm_value;
       rpm *= (0.010*sys.spindle_speed_ovr); // Scale by spindle speed override value.
-      // Calculate PWM register value based on rpm max/min settings and programmed rpm.
-      if ((settings.rpm_min >= settings.rpm_max) || (rpm >= settings.rpm_max)) {
-        // No PWM range possible. Set simple on/off spindle control pin state.
-        sys.spindle_speed = settings.rpm_max;
-        pwm_value = SPINDLE_PWM_MAX_VALUE;
-      } else if (rpm <= settings.rpm_min) {
-        if (rpm == 0.0) { // S0 disables spindle
-          sys.spindle_speed = 0.0;
-          pwm_value = SPINDLE_PWM_OFF_VALUE;
-        } else { // Set minimum PWM output
-          sys.spindle_speed = settings.rpm_min;
-          pwm_value = SPINDLE_PWM_MIN_VALUE;
-        }
-      } else { 
-        // Compute intermediate PWM value with linear spindle speed model.
-        // NOTE: A nonlinear model could be installed here, if required, but keep it VERY light-weight.
+      if (rpm == 0.0) {
+        // S0 or M5: pen up position.
+        sys.spindle_speed = 0.0;
+        pwm_value = SERVO_PEN_UP_VALUE;
+      } else {
+        // Map rpm (rpm_min..rpm_max) linearly to servo pulse range.
+        if (rpm > settings.rpm_max) { rpm = settings.rpm_max; }
+        if (rpm < settings.rpm_min) { rpm = settings.rpm_min; }
         sys.spindle_speed = rpm;
-        pwm_value = floor((rpm-settings.rpm_min)*pwm_gradient) + SPINDLE_PWM_MIN_VALUE;
+        float t = (rpm - settings.rpm_min) / (settings.rpm_max - settings.rpm_min);
+        pwm_value = (uint8_t)(SERVO_PEN_UP_VALUE + t * (SERVO_PEN_DOWN_VALUE - SERVO_PEN_UP_VALUE) + 0.5f);
       }
       return(pwm_value);
     }

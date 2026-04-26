@@ -102,8 +102,9 @@
 // on separate pin, but homed in one cycle. Also, it should be noted that the function of hard limits
 // will not be affected by pin sharing.
 // NOTE: Defaults are set for a traditional 3-axis CNC machine. Z-axis first to clear, followed by X & Y.
-#define HOMING_CYCLE_0 (1<<Z_AXIS)                // REQUIRED: First move Z to clear workspace.
-#define HOMING_CYCLE_1 ((1<<X_AXIS)|(1<<Y_AXIS))  // OPTIONAL: Then move X,Y at the same time.
+// #define HOMING_CYCLE_0 (1<<Z_AXIS)              // Disabled: Z axis uses servo for pen lift
+#define HOMING_CYCLE_0 ((1<<X_AXIS)|(1<<Y_AXIS))  // Home X and Y only (no Z - servo pen lift)
+// #define HOMING_CYCLE_1 ((1<<X_AXIS)|(1<<Y_AXIS))
 // #define HOMING_CYCLE_2                         // OPTIONAL: Uncomment and add axes mask to enable
 
 // NOTE: The following are two examples to setup homing for 2-axis machines.
@@ -178,6 +179,14 @@
 // between restoring the spindle and coolant and resuming the cycle.
 #define SAFETY_DOOR_SPINDLE_DELAY 4.0 // Float (seconds)
 #define SAFETY_DOOR_COOLANT_DELAY 1.0 // Float (seconds)
+
+// Servo pen lift configuration (SG-90 on spindle PWM Pin 11, Timer2 ~61Hz).
+// Timer2 Fast PWM, prescaler /1024, TOP=255: period = 16.384ms
+// Pulse widths: 1.0ms = pen up (OCR2A=16), 2.0ms = pen down (OCR2A=31)
+// G-code: M3 S1000 = pen DOWN, M5 = pen UP
+// Adjust SERVO_PEN_UP_VALUE / SERVO_PEN_DOWN_VALUE to tune your servo endpoints.
+#define SERVO_PEN_UP_VALUE    16  // OCR2A for pen up   (~1.0ms pulse)
+#define SERVO_PEN_DOWN_VALUE  31  // OCR2A for pen down (~2.0ms pulse)
 
 // Enable CoreXY kinematics. Use ONLY with CoreXY machines.
 // IMPORTANT: If homing is enabled, you must reconfigure the homing cycle #defines above to
